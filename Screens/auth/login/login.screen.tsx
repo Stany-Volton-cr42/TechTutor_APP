@@ -1,4 +1,6 @@
 import { View, Text, ScrollView, StyleSheet, Image, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
+import OnBoardingScreen from "@/Screens/onboarding/onboardingScreen";
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
 
 import {
     Entypo,
@@ -31,6 +33,7 @@ import { Toast } from "react-native-toast-notifications";
 
 
 
+
 export default function LoginScreen() {
     const [isPasswordVisible, setPasswordVisible] = useState(false);
     const [buttonSpinner, setButtonSpinner] = useState(false);
@@ -38,54 +41,75 @@ export default function LoginScreen() {
         email: "",
         password: "",
     });
-
+    const [required, setRequired] = useState("");
     const [error, setError] = useState({
         password: "",
     });
-    const [required, setRequired] = useState({
-        email: false,
-        password: false,
+
+    let [fontsLoaded, fontError] = useFonts({
+        Raleway_600SemiBold,
+        Raleway_700Bold,
+        Nunito_400Regular,
+        Nunito_500Medium,
+        Nunito_700Bold,
+        Nunito_600SemiBold,
     });
-    {
-        required && (
-            <View style={commonStyles.errorContainer}>
-                <Entypo name="cross" size={18} color={"red"} />
-            </View>
-        )
+
+    if (!fontsLoaded && !fontError) {
+        return null;
     }
 
+    const handlePasswordValidation = (value: string) => {
+        const password = value;
+        const passwordSpecialCharacter = /(?=.*[!@#$&*])/;
+        const passwordOneNumber = /(?=.*[0-9])/;
+        const passwordSixValue = /(?=.{6,})/;
 
-
+        if (!passwordSpecialCharacter.test(password)) {
+            setError({
+                ...error,
+                password: "Write at least one special character",
+            });
+            setUserInfo({ ...userInfo, password: "" });
+        } else if (!passwordOneNumber.test(password)) {
+            setError({
+                ...error,
+                password: "Write at least one number",
+            });
+            setUserInfo({ ...userInfo, password: "" });
+        } else if (!passwordSixValue.test(password)) {
+            setError({
+                ...error,
+                password: "Write at least 6 characters",
+            });
+            setUserInfo({ ...userInfo, password: "" });
+        } else {
+            setError({
+                ...error,
+                password: "",
+            });
+            setUserInfo({ ...userInfo, password: value });
+        }
+    };
 
     const handleSignIn = async () => {
         await axios
-          .post(`${SERVER_URI}/login`, {
-            email: userInfo.email,
-            password: userInfo.password,
-          })
-          .then(async (res) => {
-            await AsyncStorage.setItem("access_token", res.data.accessToken);
-            await AsyncStorage.setItem("refresh_token", res.data.refreshToken);
-            router.push("/(tabs)");
-          })
-          .catch((error) => {
-            console.log(error);
-            Toast.show("Email or password is not correct!", {
-              type: "danger",
+            .post(`${SERVER_URI}/login`, {
+                email: userInfo.email,
+                password: userInfo.password,
+            })
+            .then(async (res) => {
+                await AsyncStorage.setItem("access_token", res.data.accessToken);
+                await AsyncStorage.setItem("refresh_token", res.data.refreshToken);
+                router.push("/(tabs)");
+            })
+            .catch((error) => {
+                console.log(error);
+                Toast.show("Email or password is not correct!", {
+                    type: "danger",
+                });
             });
-          });
-      };
-
-
-
-
-
-
-
-
-
-
-
+    };
 
 
 
@@ -158,11 +182,14 @@ export default function LoginScreen() {
 
                     <TouchableOpacity
                         style={{
-                            padding: 16,
-                            borderRadius: 8,
-                            marginHorizontal: 16,
-                            backgroundColor: "#2467EC",
-                            marginTop: 15,
+                            marginTop: 40,
+                            marginBottom: 0,
+                            width: wp('90%'),
+                            height: hp('6%'),
+                            borderRadius: 10,
+                            backgroundColor: '#2467EC',
+                            justifyContent: 'center',
+                            alignItems: 'center',
                         }}
                         onPress={handleSignIn}
                     >
@@ -181,6 +208,46 @@ export default function LoginScreen() {
                             </Text>
                         )}
                     </TouchableOpacity>
+
+
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginTop: 20,
+                            gap: 10,
+                        }}
+                    >
+                        <TouchableOpacity>
+                            <FontAwesome name="google" size={30} />
+                        </TouchableOpacity>
+                        <TouchableOpacity>
+                            <FontAwesome name="github" size={30} />
+                        </TouchableOpacity>
+                    </View>
+
+
+                    <View style={styles.signupRedirect}>
+                        <Text style={{ fontSize: 15, fontFamily: "Raleway_600SemiBold" }}>
+                            Don't have an account?
+                        </Text>
+                        <TouchableOpacity
+                            onPress={() => router.push("/(routes)/sign-up")}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 15,
+                                    fontFamily: "Raleway_600SemiBold",
+                                    color: "#2467EC",
+                                    marginLeft: 5,
+                                }}
+                            >
+                                Sign Up
+                            </Text>
+                        </TouchableOpacity>
+
+                    </View>
                 </View>
             </ScrollView>
         </LinearGradient>
@@ -192,7 +259,7 @@ const styles = StyleSheet.create({
         width: "60%",
         height: 250,
         alignSelf: "center",
-        marginTop: 50,
+        marginTop: 0,
     },
     welcomeText: {
         fontSize: 28,
@@ -251,6 +318,13 @@ const styles = StyleSheet.create({
         color: "#575757",
         textDecorationLine: "underline",
         fontFamily: "Nunito_600SemiBold",
+    },
+    signupRedirect: {
+        marginTop: 10,
+        marginBottom: 0,
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
     }
 });
 
